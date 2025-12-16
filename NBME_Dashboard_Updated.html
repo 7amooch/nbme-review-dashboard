@@ -1,0 +1,2316 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NBME Review Dashboard - Premium Edition</title>
+
+<!-- External Libraries -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
+
+<style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&display=swap');
+
+    * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+    }
+
+    :root {
+        --primary: #6366f1;
+        --primary-light: #818cf8;
+        --primary-dark: #4f46e5;
+        --secondary: #8b5cf6;
+        --accent: #ec4899;
+        --success: #10b981;
+        --warning: #f59e0b;
+        --danger: #ef4444;
+        --info: #3b82f6;
+
+        /* Light Mode */
+        --bg-primary: #ffffff;
+        --bg-secondary: #f8fafc;
+        --bg-tertiary: #f1f5f9;
+        --bg-gradient-start: #fafbff;
+        --bg-gradient-end: #f0f4ff;
+        --text-primary: #0f172a;
+        --text-secondary: #475569;
+        --text-tertiary: #64748b;
+        --border-color: #e2e8f0;
+        --shadow: rgba(99, 102, 241, 0.08);
+        --shadow-lg: rgba(99, 102, 241, 0.15);
+        --card-hover: rgba(99, 102, 241, 0.03);
+    }
+
+    [data-theme="dark"] {
+        --bg-primary: #0f172a;
+        --bg-secondary: #1e293b;
+        --bg-tertiary: #334155;
+        --bg-gradient-start: #0a0e1a;
+        --bg-gradient-end: #1a1f35;
+        --text-primary: #f1f5f9;
+        --text-secondary: #cbd5e1;
+        --text-tertiary: #94a3b8;
+        --border-color: #334155;
+        --shadow: rgba(0, 0, 0, 0.3);
+        --shadow-lg: rgba(0, 0, 0, 0.5);
+        --card-hover: rgba(99, 102, 241, 0.1);
+    }
+
+    body {
+        font-family: 'Cairo', 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+        background: linear-gradient(135deg, var(--bg-gradient-start) 0%, var(--bg-gradient-end) 100%);
+        color: var(--text-primary);
+        min-height: 100vh;
+        padding: 24px;
+        transition: background 0.4s ease, color 0.3s ease;
+        position: relative;
+    }
+
+    body::before {
+        content: '';
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: 
+            radial-gradient(circle at 20% 30%, rgba(99, 102, 241, 0.08) 0%, transparent 50%),
+            radial-gradient(circle at 80% 70%, rgba(139, 92, 246, 0.08) 0%, transparent 50%);
+        pointer-events: none;
+        z-index: -1;
+        animation: bgShift 20s ease-in-out infinite;
+    }
+
+    @keyframes bgShift {
+        0%, 100% { transform: scale(1) rotate(0deg); }
+        50% { transform: scale(1.1) rotate(5deg); }
+    }
+
+    .container {
+        max-width: 1600px;
+        margin: 0 auto;
+        animation: containerFadeIn 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    @keyframes containerFadeIn {
+        from {
+            opacity: 0;
+            transform: translateY(30px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    .header {
+        background: var(--bg-primary);
+        border-radius: 20px;
+        padding: 48px;
+        margin-bottom: 28px;
+        box-shadow: 0 8px 32px var(--shadow), 0 1px 3px var(--shadow-lg);
+        border: 1px solid var(--border-color);
+        position: relative;
+        overflow: hidden;
+        transition: all 0.3s ease;
+    }
+
+    .header::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 4px;
+        background: linear-gradient(90deg, var(--primary), var(--secondary), var(--accent));
+        background-size: 200% 100%;
+        animation: gradientSlide 3s linear infinite;
+    }
+
+    @keyframes gradientSlide {
+        0% { background-position: 0% 0%; }
+        100% { background-position: 200% 0%; }
+    }
+
+    .header:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 12px 48px var(--shadow-lg);
+    }
+
+    .header-content {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 24px;
+    }
+
+    .header-left h1 {
+        font-size: 2.75em;
+        font-weight: 900;
+        background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        margin-bottom: 10px;
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        animation: titleFadeIn 0.8s cubic-bezier(0.16, 1, 0.3, 1) 0.2s both;
+    }
+
+    @keyframes titleFadeIn {
+        from {
+            opacity: 0;
+            transform: translateX(-20px);
+        }
+        to {
+            opacity: 1;
+            transform: translateX(0);
+        }
+    }
+
+    .header-left p {
+        font-size: 1.1em;
+        color: var(--text-secondary);
+        font-weight: 500;
+        animation: subtitleFadeIn 0.8s cubic-bezier(0.16, 1, 0.3, 1) 0.4s both;
+    }
+
+    @keyframes subtitleFadeIn {
+        from {
+            opacity: 0;
+            transform: translateX(-15px);
+        }
+        to {
+            opacity: 1;
+            transform: translateX(0);
+        }
+    }
+
+    .theme-toggle {
+        position: relative;
+        width: 68px;
+        height: 34px;
+        background: var(--bg-tertiary);
+        border-radius: 17px;
+        cursor: pointer;
+        border: 2px solid var(--border-color);
+        transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+        animation: toggleFadeIn 0.8s cubic-bezier(0.16, 1, 0.3, 1) 0.6s both;
+    }
+
+    @keyframes toggleFadeIn {
+        from {
+            opacity: 0;
+            transform: scale(0.8);
+        }
+        to {
+            opacity: 1;
+            transform: scale(1);
+        }
+    }
+
+    .theme-toggle:hover {
+        border-color: var(--primary);
+        box-shadow: 0 4px 20px var(--shadow-lg);
+        transform: scale(1.05);
+    }
+
+    .theme-toggle-slider {
+        position: absolute;
+        top: 3px;
+        left: 3px;
+        width: 24px;
+        height: 24px;
+        background: linear-gradient(135deg, var(--primary), var(--secondary));
+        border-radius: 50%;
+        transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        box-shadow: 0 2px 8px var(--shadow-lg);
+    }
+
+    [data-theme="dark"] .theme-toggle-slider {
+        transform: translateX(34px);
+    }
+
+    .controls {
+        background: var(--bg-primary);
+        padding: 24px;
+        border-radius: 16px;
+        margin-bottom: 28px;
+        box-shadow: 0 4px 20px var(--shadow);
+        border: 1px solid var(--border-color);
+        display: flex;
+        flex-wrap: wrap;
+        gap: 14px;
+        align-items: center;
+        justify-content: space-between;
+        transition: all 0.3s ease;
+        animation: controlsFadeIn 0.8s cubic-bezier(0.16, 1, 0.3, 1) 0.3s both;
+    }
+
+    @keyframes controlsFadeIn {
+        from {
+            opacity: 0;
+            transform: translateY(20px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    .controls:hover {
+        box-shadow: 0 8px 32px var(--shadow-lg);
+    }
+
+    .controls-left,
+    .controls-right {
+        display: flex;
+        gap: 12px;
+        flex-wrap: wrap;
+    }
+
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 24px;
+        margin-bottom: 28px;
+    }
+
+    .stat-card {
+        background: var(--bg-primary);
+        padding: 32px;
+        border-radius: 16px;
+        border: 1px solid var(--border-color);
+        box-shadow: 0 4px 20px var(--shadow);
+        transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+        position: relative;
+        overflow: hidden;
+        animation: cardFadeIn 0.6s cubic-bezier(0.16, 1, 0.3, 1) both;
+    }
+
+    .stat-card:nth-child(1) { animation-delay: 0.4s; }
+    .stat-card:nth-child(2) { animation-delay: 0.5s; }
+    .stat-card:nth-child(3) { animation-delay: 0.6s; }
+    .stat-card:nth-child(4) { animation-delay: 0.7s; }
+
+    @keyframes cardFadeIn {
+        from {
+            opacity: 0;
+            transform: translateY(30px) scale(0.95);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0) scale(1);
+        }
+    }
+
+    .stat-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 3px;
+        background: linear-gradient(90deg, transparent, var(--primary), transparent);
+        transform: scaleX(0);
+        transition: transform 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .stat-card:hover::before {
+        transform: scaleX(1);
+    }
+
+    .stat-card:hover {
+        transform: translateY(-8px) scale(1.02);
+        box-shadow: 0 12px 48px var(--shadow-lg);
+        background: var(--card-hover);
+    }
+
+    .stat-card-header {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        margin-bottom: 18px;
+    }
+
+    .stat-icon {
+        width: 52px;
+        height: 52px;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+        transition: all 0.3s ease;
+    }
+
+    .stat-card:hover .stat-icon {
+        transform: scale(1.1) rotate(5deg);
+    }
+
+    .stat-card h3 {
+        color: var(--text-secondary);
+        font-size: 0.875em;
+        text-transform: uppercase;
+        letter-spacing: 0.8px;
+        font-weight: 700;
+    }
+
+    .stat-card .value {
+        font-size: 2.75em;
+        font-weight: 900;
+        background: linear-gradient(135deg, var(--text-primary) 0%, var(--text-secondary) 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        line-height: 1;
+        transition: all 0.3s ease;
+        margin-bottom: 12px;
+    }
+
+    .stat-card:hover .value {
+        transform: scale(1.05);
+    }
+
+    /* Progress Bar Styles */
+    .progress-container {
+        width: 100%;
+        margin-top: 16px;
+    }
+
+    .progress-label {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 8px;
+        font-size: 0.85em;
+        color: var(--text-secondary);
+        font-weight: 600;
+    }
+
+    .progress-bar-wrapper {
+        width: 100%;
+        height: 12px;
+        background: var(--bg-tertiary);
+        border-radius: 10px;
+        overflow: hidden;
+        box-shadow: inset 0 2px 4px rgba(0,0,0,0.1);
+        position: relative;
+    }
+
+    .progress-bar {
+        height: 100%;
+        border-radius: 10px;
+        transition: width 1s cubic-bezier(0.16, 1, 0.3, 1);
+        position: relative;
+        overflow: hidden;
+    }
+
+    .progress-bar::after {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: linear-gradient(90deg, 
+            transparent, 
+            rgba(255,255,255,0.3), 
+            transparent
+        );
+        animation: shimmer 2s infinite;
+    }
+
+    @keyframes shimmer {
+        0% { transform: translateX(-100%); }
+        100% { transform: translateX(100%); }
+    }
+
+    .progress-success {
+        background: linear-gradient(90deg, var(--success), #059669);
+    }
+
+    .progress-info {
+        background: linear-gradient(90deg, var(--info), #2563eb);
+    }
+
+    .progress-warning {
+        background: linear-gradient(90deg, var(--warning), #d97706);
+    }
+
+    .progress-danger {
+        background: linear-gradient(90deg, var(--danger), #dc2626);
+    }
+
+    .nbme-list {
+        display: grid;
+        gap: 24px;
+    }
+
+    .nbme-item {
+        background: var(--bg-primary);
+        border-radius: 16px;
+        border: 1px solid var(--border-color);
+        box-shadow: 0 4px 20px var(--shadow);
+        overflow: hidden;
+        transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+        animation: itemFadeIn 0.6s cubic-bezier(0.16, 1, 0.3, 1) both;
+    }
+
+    .nbme-item:nth-child(1) { animation-delay: 0.5s; }
+    .nbme-item:nth-child(2) { animation-delay: 0.6s; }
+    .nbme-item:nth-child(3) { animation-delay: 0.7s; }
+
+    @keyframes itemFadeIn {
+        from {
+            opacity: 0;
+            transform: translateX(-30px);
+        }
+        to {
+            opacity: 1;
+            transform: translateX(0);
+        }
+    }
+
+    .nbme-item:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 12px 48px var(--shadow-lg);
+    }
+
+    .nbme-header {
+        background: linear-gradient(135deg, var(--primary), var(--secondary));
+        padding: 28px 36px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .nbme-header::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.15), transparent);
+        transition: left 0.5s ease;
+    }
+
+    .nbme-header:hover::before {
+        left: 100%;
+    }
+
+    .nbme-header:hover {
+        background: linear-gradient(135deg, var(--primary-dark), var(--secondary));
+    }
+
+    .nbme-header-left {
+        display: flex;
+        align-items: center;
+        gap: 22px;
+    }
+
+    .nbme-title {
+        font-size: 1.9em;
+        font-weight: 900;
+        color: white;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        transition: all 0.3s ease;
+    }
+
+    .nbme-header:hover .nbme-title {
+        transform: translateX(4px);
+    }
+
+    .nbme-score {
+        background: rgba(255, 255, 255, 0.2);
+        backdrop-filter: blur(10px);
+        padding: 10px 22px;
+        border-radius: 10px;
+        font-size: 1.35em;
+        font-weight: 800;
+        color: white;
+        border: 1px solid rgba(255, 255, 255, 0.3);
+        transition: all 0.3s ease;
+    }
+
+    .nbme-header:hover .nbme-score {
+        background: rgba(255, 255, 255, 0.3);
+        transform: scale(1.05);
+    }
+
+    .nbme-header-right {
+        display: flex;
+        align-items: center;
+        gap: 18px;
+    }
+
+    .nbme-date {
+        color: rgba(255, 255, 255, 0.95);
+        font-size: 1em;
+        font-weight: 600;
+        display: flex;
+        align-items: center;
+    }
+
+    .expand-icon {
+        width: 26px;
+        height: 26px;
+        transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .expand-icon.expanded {
+        transform: rotate(180deg);
+    }
+
+    .nbme-content {
+        max-height: 0;
+        overflow: hidden;
+        transition: max-height 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .nbme-content.expanded {
+        max-height: 10000px;
+    }
+
+    .nbme-body {
+        padding: 36px;
+        animation: bodyFadeIn 0.5s ease;
+    }
+
+    @keyframes bodyFadeIn {
+        from {
+            opacity: 0;
+            transform: translateY(-10px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    .nbme-stats-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 20px;
+        margin-bottom: 24px;
+        padding: 24px;
+        background: var(--bg-secondary);
+        border-radius: 12px;
+    }
+
+    .nbme-stat-item {
+        text-align: center;
+    }
+
+    .nbme-stat-label {
+        font-size: 0.8em;
+        color: var(--text-secondary);
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        margin-bottom: 8px;
+    }
+
+    .nbme-stat-value {
+        font-size: 1.8em;
+        font-weight: 800;
+        color: var(--text-primary);
+    }
+
+    .questions-container {
+        background: var(--bg-primary);
+        border-radius: 14px;
+        overflow: hidden;
+        border: 1px solid var(--border-color);
+        margin-top: 24px;
+        box-shadow: 0 4px 16px var(--shadow);
+        transition: all 0.3s ease;
+    }
+
+    .questions-container:hover {
+        box-shadow: 0 8px 32px var(--shadow-lg);
+    }
+
+    .table-wrapper {
+        overflow-x: auto;
+    }
+
+    .questions-table {
+        width: 100%;
+        border-collapse: collapse;
+        min-width: 1600px;
+    }
+
+    .questions-table thead {
+        background: linear-gradient(135deg, var(--bg-tertiary), var(--bg-secondary));
+    }
+
+    .questions-table th {
+        color: var(--text-primary);
+        padding: 18px 14px;
+        text-align: right;
+        font-weight: 800;
+        font-size: 0.8em;
+        text-transform: uppercase;
+        letter-spacing: 0.8px;
+        white-space: nowrap;
+        border-bottom: 2px solid var(--border-color);
+    }
+
+    .questions-table tbody tr {
+        border-bottom: 1px solid var(--border-color);
+        transition: all 0.2s ease;
+    }
+
+    .questions-table tbody tr:hover {
+        background: var(--card-hover);
+        transform: scale(1.005);
+    }
+
+    .questions-table td {
+        padding: 18px 14px;
+        vertical-align: top;
+    }
+
+    .questions-table select,
+    .questions-table input[type="text"],
+    .questions-table textarea,
+    input[type="text"],
+    input[type="date"],
+    input[type="number"],
+    select {
+        width: 100%;
+        padding: 11px 14px;
+        border: 1.5px solid var(--border-color);
+        border-radius: 10px;
+        font-family: inherit;
+        font-size: 0.9em;
+        transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+        background: var(--bg-primary);
+        color: var(--text-primary);
+    }
+
+    .questions-table select:focus,
+    .questions-table input:focus,
+    .questions-table textarea:focus,
+    input:focus,
+    select:focus {
+        outline: none;
+        border-color: var(--primary);
+        box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.1);
+        transform: translateY(-2px);
+    }
+
+    .questions-table textarea {
+        min-height: 85px;
+        resize: vertical;
+        line-height: 1.6;
+    }
+
+    .status-incorrect {
+        background: linear-gradient(90deg, rgba(239, 68, 68, 0.08), transparent) !important;
+        border-right: 4px solid var(--danger);
+    }
+
+    .status-correct {
+        background: linear-gradient(90deg, rgba(16, 185, 129, 0.08), transparent) !important;
+        border-right: 4px solid var(--success);
+    }
+
+    .status-guessed {
+        background: linear-gradient(90deg, rgba(245, 158, 11, 0.08), transparent) !important;
+        border-right: 4px solid var(--warning);
+    }
+
+    .btn {
+        padding: 13px 28px;
+        border: none;
+        border-radius: 10px;
+        font-size: 0.875em;
+        font-weight: 700;
+        cursor: pointer;
+        transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+        text-transform: uppercase;
+        letter-spacing: 0.6px;
+        display: inline-flex;
+        align-items: center;
+        gap: 9px;
+        border: 1px solid transparent;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .btn::before {
+        content: '';
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        width: 0;
+        height: 0;
+        border-radius: 50%;
+        background: rgba(255, 255, 255, 0.3);
+        transform: translate(-50%, -50%);
+        transition: width 0.6s ease, height 0.6s ease;
+    }
+
+    .btn:hover::before {
+        width: 300px;
+        height: 300px;
+    }
+
+    .btn > * {
+        position: relative;
+        z-index: 1;
+    }
+
+    .btn:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 8px 24px var(--shadow-lg);
+    }
+
+    .btn:active {
+        transform: translateY(-1px);
+    }
+
+    .btn-primary {
+        background: linear-gradient(135deg, var(--primary), var(--primary-light));
+        color: white;
+        box-shadow: 0 4px 16px rgba(99, 102, 241, 0.3);
+    }
+
+    .btn-primary:hover {
+        background: linear-gradient(135deg, var(--primary-dark), var(--primary));
+        box-shadow: 0 8px 32px rgba(99, 102, 241, 0.4);
+    }
+
+    .btn-success {
+        background: linear-gradient(135deg, var(--success), #059669);
+        color: white;
+        box-shadow: 0 4px 16px rgba(16, 185, 129, 0.3);
+    }
+
+    .btn-success:hover {
+        box-shadow: 0 8px 32px rgba(16, 185, 129, 0.4);
+    }
+
+    .btn-warning {
+        background: linear-gradient(135deg, var(--warning), #d97706);
+        color: white;
+        box-shadow: 0 4px 16px rgba(245, 158, 11, 0.3);
+    }
+
+    .btn-warning:hover {
+        box-shadow: 0 8px 32px rgba(245, 158, 11, 0.4);
+    }
+
+    .btn-danger {
+        background: linear-gradient(135deg, var(--danger), #dc2626);
+        color: white;
+        padding: 9px 18px;
+        font-size: 0.8em;
+        box-shadow: 0 4px 16px rgba(239, 68, 68, 0.3);
+    }
+
+    .btn-danger:hover {
+        box-shadow: 0 8px 32px rgba(239, 68, 68, 0.4);
+    }
+
+    .btn-info {
+        background: linear-gradient(135deg, var(--info), #2563eb);
+        color: white;
+        box-shadow: 0 4px 16px rgba(59, 130, 246, 0.3);
+    }
+
+    .btn-info:hover {
+        box-shadow: 0 8px 32px rgba(59, 130, 246, 0.4);
+    }
+
+    .modal {
+        display: none;
+        position: fixed;
+        z-index: 2000;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.7);
+        backdrop-filter: blur(8px);
+        overflow-y: auto;
+    }
+
+    .modal.show {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        padding: 20px;
+        animation: modalFadeIn 0.3s ease;
+    }
+
+    @keyframes modalFadeIn {
+        from { opacity: 0; }
+        to { opacity: 1; }
+    }
+
+    .modal-content {
+        background: var(--bg-primary);
+        padding: 36px;
+        border-radius: 20px;
+        box-shadow: 0 25px 80px var(--shadow-lg);
+        max-width: 540px;
+        width: 90%;
+        border: 1px solid var(--border-color);
+        animation: modalSlideUp 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    @keyframes modalSlideUp {
+        from {
+            opacity: 0;
+            transform: translateY(40px) scale(0.95);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0) scale(1);
+        }
+    }
+
+    .modal-header {
+        font-size: 1.9em;
+        font-weight: 900;
+        background: linear-gradient(135deg, var(--primary), var(--secondary));
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        margin-bottom: 28px;
+        display: flex;
+        align-items: center;
+        gap: 14px;
+    }
+
+    .modal-body {
+        margin-bottom: 28px;
+    }
+
+    .form-group {
+        margin-bottom: 22px;
+    }
+
+    .form-group label {
+        display: block;
+        color: var(--text-secondary);
+        font-weight: 700;
+        margin-bottom: 10px;
+        font-size: 0.875em;
+        text-transform: uppercase;
+        letter-spacing: 0.6px;
+    }
+
+    .modal-footer {
+        display: flex;
+        gap: 14px;
+        justify-content: flex-end;
+    }
+
+    .toast {
+        position: fixed;
+        top: 28px;
+        right: 28px;
+        background: var(--bg-primary);
+        color: var(--text-primary);
+        padding: 18px 28px;
+        border-radius: 12px;
+        box-shadow: 0 12px 48px var(--shadow-lg);
+        z-index: 3000;
+        opacity: 0;
+        transform: translateX(400px);
+        transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+        font-weight: 600;
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        border: 1px solid var(--border-color);
+    }
+
+    .toast.show {
+        opacity: 1;
+        transform: translateX(0);
+    }
+
+    .toast.error {
+        border-right: 4px solid var(--danger);
+    }
+
+    .toast:not(.error) {
+        border-right: 4px solid var(--success);
+    }
+
+    .save-indicator {
+        position: fixed;
+        bottom: 28px;
+        right: 28px;
+        background: linear-gradient(135deg, var(--success), #059669);
+        color: white;
+        padding: 14px 24px;
+        border-radius: 50px;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        box-shadow: 0 8px 32px rgba(16, 185, 129, 0.4);
+        z-index: 1500;
+        opacity: 0;
+        transform: translateY(100px);
+        transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+        font-weight: 700;
+        font-size: 0.875em;
+    }
+
+    .save-indicator.show {
+        opacity: 1;
+        transform: translateY(0);
+    }
+
+    .spinner {
+        width: 16px;
+        height: 16px;
+        border: 2px solid rgba(255, 255, 255, 0.3);
+        border-top-color: white;
+        border-radius: 50%;
+        animation: spin 0.6s linear infinite;
+    }
+
+    @keyframes spin {
+        to { transform: rotate(360deg); }
+    }
+
+    .section-title {
+        font-size: 1.5em;
+        font-weight: 900;
+        background: linear-gradient(135deg, var(--text-primary), var(--text-secondary));
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        margin-bottom: 22px;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+
+    /* Footer Styles - New Modern Design */
+    .footer {
+        text-align: center;
+        padding: 60px 40px 40px;
+        margin-top: 60px;
+        background: var(--bg-primary);
+        border-radius: 20px;
+        border: 1px solid var(--border-color);
+        box-shadow: 0 4px 20px var(--shadow);
+        position: relative;
+        overflow: hidden;
+        animation: footerFadeIn 0.8s cubic-bezier(0.16, 1, 0.3, 1) 1s both;
+    }
+
+    @keyframes footerFadeIn {
+        from {
+            opacity: 0;
+            transform: translateY(30px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    .footer-waves {
+        position: absolute;
+        top: -60px;
+        left: 0;
+        width: 100%;
+        overflow: hidden;
+        line-height: 0;
+    }
+
+    .footer-waves svg {
+        position: relative;
+        display: block;
+        width: calc(100% + 1.3px);
+        height: 60px;
+    }
+
+    .footer-waves path {
+        fill: var(--bg-primary);
+        opacity: 0.8;
+    }
+
+    .footer-content-wrapper {
+        position: relative;
+        z-index: 1;
+    }
+
+    .footer-main {
+        color: var(--text-secondary);
+        font-size: 1.05em;
+        font-weight: 600;
+        margin-bottom: 30px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+    }
+
+    .footer-divider {
+        width: 80px;
+        height: 3px;
+        background: linear-gradient(90deg, transparent, var(--primary), var(--secondary), transparent);
+        margin: 24px auto;
+        border-radius: 2px;
+        animation: dividerPulse 3s ease-in-out infinite;
+    }
+
+    @keyframes dividerPulse {
+        0%, 100% { opacity: 1; transform: scaleX(1); }
+        50% { opacity: 0.7; transform: scaleX(1.2); }
+    }
+
+    .footer-signature {
+        margin-top: 32px;
+        padding-top: 32px;
+        border-top: 1px solid var(--border-color);
+    }
+
+    .signature-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 20px;
+        padding: 24px 40px;
+        background: linear-gradient(135deg, 
+            rgba(99, 102, 241, 0.05), 
+            rgba(139, 92, 246, 0.05)
+        );
+        border-radius: 20px;
+        border: 2px solid transparent;
+        background-clip: padding-box;
+        position: relative;
+        transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .signature-badge::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        border-radius: 18px;
+        padding: 2px;
+        background: linear-gradient(135deg, var(--primary), var(--secondary), var(--accent));
+        -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+        -webkit-mask-composite: xor;
+        mask-composite: exclude;
+        animation: borderRotate 3s linear infinite;
+    }
+
+    @keyframes borderRotate {
+        0% { filter: hue-rotate(0deg); }
+        100% { filter: hue-rotate(360deg); }
+    }
+
+    .signature-badge:hover {
+        transform: translateY(-8px) scale(1.02);
+        box-shadow: 0 12px 40px rgba(99, 102, 241, 0.3);
+    }
+
+    .badge-icon {
+        width: 60px;
+        height: 60px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: linear-gradient(135deg, var(--primary), var(--secondary));
+        border-radius: 16px;
+        color: white;
+        flex-shrink: 0;
+        box-shadow: 0 8px 24px rgba(99, 102, 241, 0.4);
+        animation: iconFloat 3s ease-in-out infinite;
+    }
+
+    @keyframes iconFloat {
+        0%, 100% { transform: translateY(0) rotate(0deg); }
+        50% { transform: translateY(-10px) rotate(5deg); }
+    }
+
+    .badge-icon svg {
+        width: 32px;
+        height: 32px;
+        filter: drop-shadow(0 2px 4px rgba(0,0,0,0.2));
+    }
+
+    .badge-content {
+        text-align: right;
+    }
+
+    .signature-text {
+        font-size: 0.85em;
+        color: var(--text-tertiary);
+        font-weight: 500;
+        margin-bottom: 6px;
+        letter-spacing: 0.5px;
+    }
+
+    .developer-credit {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        justify-content: flex-end;
+    }
+
+    .dev-name {
+        font-size: 1.8em;
+        font-weight: 900;
+        background: linear-gradient(135deg, 
+            var(--primary), 
+            var(--secondary), 
+            var(--accent),
+            var(--primary)
+        );
+        background-size: 300% 100%;
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        animation: nameGradient 3s ease-in-out infinite, nameScale 2s ease-in-out infinite;
+        font-family: 'Cairo', sans-serif;
+        letter-spacing: 1px;
+    }
+
+    @keyframes nameGradient {
+        0%, 100% { background-position: 0% 50%; }
+        50% { background-position: 100% 50%; }
+    }
+
+    @keyframes nameScale {
+        0%, 100% { transform: scale(1); }
+        50% { transform: scale(1.05); }
+    }
+
+    .heart-icon {
+        display: inline-block;
+        color: #ef4444;
+        font-size: 1.4em;
+        animation: heartBeat 1.5s ease-in-out infinite;
+        filter: drop-shadow(0 2px 6px rgba(239, 68, 68, 0.5));
+    }
+
+    @keyframes heartBeat {
+        0%, 100% { transform: scale(1); }
+        10%, 30% { transform: scale(1.2); }
+        20%, 40% { transform: scale(1); }
+    }
+
+    .signature-tagline {
+        font-size: 0.75em;
+        color: var(--text-tertiary);
+        font-weight: 600;
+        margin-top: 6px;
+        letter-spacing: 2px;
+        text-transform: uppercase;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        justify-content: flex-end;
+    }
+
+    .signature-tagline::before,
+    .signature-tagline::after {
+        content: '';
+        width: 20px;
+        height: 1px;
+        background: linear-gradient(90deg, transparent, var(--text-tertiary));
+    }
+
+    .signature-tagline::after {
+        background: linear-gradient(90deg, var(--text-tertiary), transparent);
+    }
+
+    .footer-year {
+        margin-top: 24px;
+        font-size: 0.9em;
+        color: var(--text-tertiary);
+        font-weight: 500;
+        opacity: 0.8;
+    }
+
+    .empty-state {
+        text-align: center;
+        padding: 70px 20px;
+    }
+
+    .empty-state-icon {
+        width: 90px;
+        height: 90px;
+        margin: 0 auto 24px;
+        opacity: 0.3;
+        animation: emptyFloat 3s ease-in-out infinite;
+    }
+
+    @keyframes emptyFloat {
+        0%, 100% { transform: translateY(0); }
+        50% { transform: translateY(-10px); }
+    }
+
+    .empty-state-text {
+        font-size: 1.35em;
+        font-weight: 800;
+        color: var(--text-primary);
+        margin-bottom: 10px;
+    }
+
+    .empty-state-subtext {
+        font-size: 1em;
+        color: var(--text-secondary);
+    }
+
+    @media (max-width: 768px) {
+        body {
+            padding: 16px;
+        }
+
+        .header {
+            padding: 32px 24px;
+        }
+
+        .header-left h1 {
+            font-size: 1.9em;
+        }
+
+        .nbme-header {
+            flex-direction: column;
+            gap: 14px;
+            align-items: flex-start;
+        }
+
+        .controls {
+            flex-direction: column;
+        }
+
+        .controls-left,
+        .controls-right {
+            width: 100%;
+            flex-direction: column;
+        }
+
+        .btn {
+            width: 100%;
+            justify-content: center;
+        }
+
+        .signature-badge {
+            flex-direction: column;
+            text-align: center;
+        }
+
+        .badge-content {
+            text-align: center;
+        }
+
+        .developer-credit,
+        .signature-tagline {
+            justify-content: center;
+        }
+
+        .dev-name {
+            font-size: 1.5em;
+        }
+    }
+
+    input[type="file"] {
+        display: none;
+    }
+
+    ::-webkit-scrollbar {
+        width: 10px;
+        height: 10px;
+    }
+
+    ::-webkit-scrollbar-track {
+        background: var(--bg-secondary);
+        border-radius: 5px;
+    }
+
+    ::-webkit-scrollbar-thumb {
+        background: linear-gradient(135deg, var(--primary), var(--secondary));
+        border-radius: 5px;
+        transition: all 0.3s ease;
+    }
+
+    ::-webkit-scrollbar-thumb:hover {
+        background: linear-gradient(135deg, var(--primary-dark), var(--primary));
+    }
+
+    .icon {
+        width: 24px;
+        height: 24px;
+        fill: currentColor;
+    }
+
+    .icon-sm {
+        width: 20px;
+        height: 20px;
+    }
+
+    .icon-lg {
+        width: 32px;
+        height: 32px;
+    }
+</style>
+</head>
+<body>
+    <svg style="display: none;">
+        <symbol id="icon-chart" viewBox="0 0 24 24">
+            <path d="M3 13h2v8H3v-8zm4-6h2v14H7V7zm4-4h2v18h-2V3zm4 9h2v9h-2v-9zm4-5h2v14h-2V7z"/>
+        </symbol>
+        <symbol id="icon-brain" viewBox="0 0 24 24">
+            <path d="M12 2C9.5 2 7.5 3.5 7 5.5 5.5 5.5 4 7 4 9c0 1 .5 2 1 2.5-.5.5-1 1.5-1 2.5 0 1.5 1 3 2.5 3.5 0 1.5 1 3 3 3.5.5 1.5 2 2.5 3.5 2.5s3-1 3.5-2.5c2-.5 3-2 3-3.5 1.5-.5 2.5-2 2.5-3.5 0-1-.5-2-1-2.5.5-.5 1-1.5 1-2.5 0-2-1.5-3.5-3-3.5-.5-2-2.5-3.5-5-3.5z"/>
+        </symbol>
+        <symbol id="icon-medical-exam" viewBox="0 0 24 24">
+            <path d="M19 3h-4.18C14.4 1.84 13.3 1 12 1s-2.4.84-2.82 2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-7 0c.55 0 1 .45 1 1s-.45 1-1 1-1-.45-1-1 .45-1 1-1zm0 4c1.66 0 3 1.34 3 3s-1.34 3-3 3-3-1.34-3-3 1.34-3 3-3zm6 12H6v-1.4c0-2 4-3.1 6-3.1s6 1.1 6 3.1V19z"/>
+        </symbol>
+        <symbol id="icon-calendar" viewBox="0 0 24 24">
+            <path d="M19 4h-1V2h-2v2H8V2H6v2H5c-1.11 0-1.99.9-1.99 2L3 20c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 16H5V10h14v10zM9 14H7v-2h2v2zm4 0h-2v-2h2v2zm4 0h-2v-2h2v2zm-8 4H7v-2h2v2zm4 0h-2v-2h2v2zm4 0h-2v-2h2v2z"/>
+        </symbol>
+        <symbol id="icon-stethoscope" viewBox="0 0 24 24">
+            <path d="M19 8c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm0 5c-1.7 0-3-1.3-3-3s1.3-3 3-3 3 1.3 3 3-1.3 3-3 3zm-4 5c0 1.7-1.3 3-3 3s-3-1.3-3-3c0-1.5 1.1-2.7 2.5-2.9V11c0-1.7-1.3-3-3-3S5.5 9.3 5.5 11v4.1C6.9 15.3 8 16.5 8 18c0 1.7-1.3 3-3 3s-3-1.3-3-3c0-1.5 1.1-2.7 2.5-2.9V11c0-2.8 2.2-5 5-5s5 2.2 5 5v4.1c1.4.2 2.5 1.4 2.5 2.9z"/>
+        </symbol>
+        <symbol id="icon-heart" viewBox="0 0 24 24">
+            <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
+        </symbol>
+        <symbol id="icon-target" viewBox="0 0 24 24">
+            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8zm0-14c-3.31 0-6 2.69-6 6s2.69 6 6 6 6-2.69 6-6-2.69-6-6-6zm0 10c-2.21 0-4-1.79-4-4s1.79-4 4-4 4 1.79 4 4-1.79 4-4 4zm0-6c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z"/>
+        </symbol>
+        <symbol id="icon-cross" viewBox="0 0 24 24">
+            <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/>
+        </symbol>
+        <symbol id="icon-plus" viewBox="0 0 24 24">
+            <path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/>
+        </symbol>
+        <symbol id="icon-download" viewBox="0 0 24 24">
+            <path d="M19 12v7H5v-7H3v7c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2v-7h-2zm-6 .67l2.59-2.58L17 11.5l-5 5-5-5 1.41-1.41L11 12.67V3h2z"/>
+        </symbol>
+        <symbol id="icon-upload" viewBox="0 0 24 24">
+            <path d="M9 16h6v-6h4l-7-7-7 7h4zm-4 2h14v2H5z"/>
+        </symbol>
+        <symbol id="icon-save" viewBox="0 0 24 24">
+            <path d="M17 3H5c-1.11 0-2 .9-2 2v14c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V7l-4-4zm-5 16c-1.66 0-3-1.34-3-3s1.34-3 3-3 3 1.34 3 3-1.34 3-3 3zm3-10H5V5h10v4z"/>
+        </symbol>
+        <symbol id="icon-document" viewBox="0 0 24 24">
+            <path d="M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 1.99 2H18c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z"/>
+        </symbol>
+        <symbol id="icon-trash" viewBox="0 0 24 24">
+            <path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/>
+        </symbol>
+        <symbol id="icon-chevron-down" viewBox="0 0 24 24">
+            <path d="M16.59 8.59L12 13.17 7.41 8.59 6 10l6 6 6-6z"/>
+        </symbol>
+        <symbol id="icon-sun" viewBox="0 0 24 24">
+            <path d="M12 7c-2.76 0-5 2.24-5 5s2.24 5 5 5 5-2.24 5-5-2.24-5-5-5zM2 13h2c.55 0 1-.45 1-1s-.45-1-1-1H2c-.55 0-1 .45-1 1s.45 1 1 1zm18 0h2c.55 0 1-.45 1-1s-.45-1-1-1h-2c-.55 0-1 .45-1 1s.45 1 1 1zM11 2v2c0 .55.45 1 1 1s1-.45 1-1V2c0-.55-.45-1-1-1s-1 .45-1 1zm0 18v2c0 .55.45 1 1 1s1-.45 1-1v-2c0-.55-.45-1-1-1s-1 .45-1 1zM5.99 4.58c-.39-.39-1.03-.39-1.41 0-.39.39-.39 1.03 0 1.41l1.06 1.06c.39.39 1.03.39 1.41 0s.39-1.03 0-1.41L5.99 4.58zm12.37 12.37c-.39-.39-1.03-.39-1.41 0-.39.39-.39 1.03 0 1.41l1.06 1.06c.39.39 1.03.39 1.41 0 .39-.39.39-1.03 0-1.41l-1.06-1.06zm1.06-10.96c.39-.39.39-1.03 0-1.41-.39-.39-1.03-.39-1.41 0l-1.06 1.06c-.39.39-.39 1.03 0 1.41s1.03.39 1.41 0l1.06-1.06zM7.05 18.36c.39-.39.39-1.03 0-1.41-.39-.39-1.03-.39-1.41 0l-1.06 1.06c-.39.39-.39 1.03 0 1.41s1.03.39 1.41 0l1.06-1.06z"/>
+        </symbol>
+        <symbol id="icon-moon" viewBox="0 0 24 24">
+            <path d="M9 2c-1.05 0-2.05.16-3 .46 4.06 1.27 7 5.06 7 9.54 0 4.48-2.94 8.27-7 9.54.95.3 1.95.46 3 .46 5.52 0 10-4.48 10-10S14.52 2 9 2z"/>
+        </symbol>
+        <symbol id="icon-check" viewBox="0 0 24 24">
+            <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/>
+        </symbol>
+    </svg>
+
+<div class="save-indicator" id="saveIndicator">
+    <div class="spinner"></div>
+    <span>جاري الحفظ التلقائي...</span>
+</div>
+
+<div class="toast" id="toast">
+    <svg class="icon icon-sm"><use href="#icon-check"></use></svg>
+    <span id="toastMessage">تم بنجاح!</span>
+</div>
+
+<div class="modal" id="addNbmeModal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <svg class="icon icon-lg" style="color: var(--primary);"><use href="#icon-plus"></use></svg>
+            إضافة NBME جديد
+        </div>
+        <div class="modal-body">
+            <div class="form-group">
+                <label>اختر رقم الـ NBME:</label>
+                <select id="nbmeNumber">
+                    <option value="25">NBME 25</option>
+                    <option value="26">NBME 26</option>
+                    <option value="27">NBME 27</option>
+                    <option value="28">NBME 28</option>
+                    <option value="29">NBME 29</option>
+                    <option value="30">NBME 30</option>
+                    <option value="31">NBME 31</option>
+                    <option value="32">NBME 32</option>
+                    <option value="custom">رقم مخصص</option>
+                </select>
+            </div>
+            <div class="form-group" id="customNumberGroup" style="display: none;">
+                <label>الرقم المخصص:</label>
+                <input type="text" id="customNumber" placeholder="أدخل الرقم المخصص">
+            </div>
+            <div class="form-group">
+                <label>تاريخ الامتحان:</label>
+                <input type="date" id="examDate">
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button class="btn btn-primary" onclick="createNbme()">
+                <svg class="icon icon-sm"><use href="#icon-check"></use></svg>
+                إنشاء
+            </button>
+            <button class="btn btn-warning" onclick="closeModal()">
+                <svg class="icon icon-sm"><use href="#icon-cross"></use></svg>
+                إلغاء
+            </button>
+        </div>
+    </div>
+</div>
+
+<div class="modal" id="studyPlanModal">
+    <div class="modal-content" style="max-width: 700px;">
+        <div class="modal-header">
+            <svg class="icon icon-lg" style="color: var(--primary);"><use href="#icon-brain"></use></svg>
+            خطة الدراسة الشخصية
+        </div>
+        <div class="modal-body">
+            <div id="studyPlanContent" style="line-height: 1.8;">
+                جاري تحميل خطة الدراسة المخصصة لك...
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button class="btn btn-primary" onclick="closeStudyPlanModal()">
+                <svg class="icon icon-sm"><use href="#icon-check"></use></svg>
+                فهمت!
+            </button>
+        </div>
+    </div>
+</div>
+
+<div class="container">
+    <div class="header">
+        <div class="header-content">
+            <div class="header-left">
+                <h1>
+                    <svg class="icon icon-lg"><use href="#icon-stethoscope"></use></svg>
+                    لوحة مراجعة NBME
+                </h1>
+                <p>نظام شامل لمراجعة امتحانات NBME | رحلة التميز الطبي</p>
+            </div>
+            <div class="theme-toggle" onclick="toggleTheme()" title="تبديل الوضع">
+                <div class="theme-toggle-slider">
+                    <svg class="icon icon-sm" style="color: white;" id="themeIcon">
+                        <use href="#icon-sun"></use>
+                    </svg>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="controls">
+        <div class="controls-left">
+            <button class="btn btn-primary" onclick="openAddNbmeModal()">
+                <svg class="icon icon-sm"><use href="#icon-plus"></use></svg>
+                إضافة NBME
+            </button>
+        </div>
+        <div class="controls-right">
+            <button class="btn btn-success" onclick="exportToExcel()">
+                <svg class="icon icon-sm"><use href="#icon-document"></use></svg>
+                Excel
+            </button>
+            <button class="btn btn-info" onclick="exportToPDF()">
+                <svg class="icon icon-sm"><use href="#icon-document"></use></svg>
+                PDF
+            </button>
+            <button class="btn btn-success" onclick="exportBackup()">
+                <svg class="icon icon-sm"><use href="#icon-save"></use></svg>
+                نسخ احتياطي
+            </button>
+            <button class="btn btn-warning" onclick="document.getElementById('importFile').click()">
+                <svg class="icon icon-sm"><use href="#icon-upload"></use></svg>
+                استيراد
+            </button>
+            <button class="btn btn-info" onclick="generateStudyPlan()">
+                <svg class="icon icon-sm"><use href="#icon-brain"></use></svg>
+                خطة دراسية
+            </button>
+            <input type="file" id="importFile" accept=".json" onchange="importBackup(event)">
+        </div>
+    </div>
+
+    <div class="stats-grid">
+        <div class="stat-card">
+            <div class="stat-card-header">
+                <div class="stat-icon" style="background: rgba(99, 102, 241, 0.12); color: var(--primary);">
+                    <svg class="icon"><use href="#icon-chart"></use></svg>
+                </div>
+                <h3>إجمالي الامتحانات</h3>
+            </div>
+            <div class="value" id="totalExams">0</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-card-header">
+                <div class="stat-icon" style="background: rgba(239, 68, 68, 0.12); color: var(--danger);">
+                    <svg class="icon"><use href="#icon-cross"></use></svg>
+                </div>
+                <h3>إجمالي الإجابات الخاطئة</h3>
+            </div>
+            <div class="value" id="totalIncorrect">0</div>
+            <div class="progress-container">
+                <div class="progress-bar-wrapper">
+                    <div class="progress-bar progress-danger" id="incorrectProgress" style="width: 0%;"></div>
+                </div>
+            </div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-card-header">
+                <div class="stat-icon" style="background: rgba(59, 130, 246, 0.12); color: var(--info);">
+                    <svg class="icon"><use href="#icon-brain"></use></svg>
+                </div>
+                <h3>متوسط الدرجات</h3>
+            </div>
+            <div class="value" id="avgScore">-%</div>
+            <div class="progress-container">
+                <div class="progress-bar-wrapper">
+                    <div class="progress-bar progress-info" id="avgProgress" style="width: 0%;"></div>
+                </div>
+            </div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-card-header">
+                <div class="stat-icon" style="background: rgba(16, 185, 129, 0.12); color: var(--success);">
+                    <svg class="icon"><use href="#icon-target"></use></svg>
+                </div>
+                <h3>أعلى درجة</h3>
+            </div>
+            <div class="value" id="highScore">-%</div>
+            <div class="progress-container">
+                <div class="progress-bar-wrapper">
+                    <div class="progress-bar progress-success" id="highProgress" style="width: 0%;"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="nbme-list" id="nbmeList">
+        <div class="empty-state">
+            <svg class="empty-state-icon" viewBox="0 0 24 24" fill="currentColor">
+                <use href="#icon-medical-exam"></use>
+            </svg>
+            <div class="empty-state-text">لا توجد امتحانات بعد</div>
+            <div class="empty-state-subtext">ابدأ بإضافة أول امتحان NBME!</div>
+        </div>
+    </div>
+
+    <div class="footer">
+        <div class="footer-waves">
+            <svg viewBox="0 0 1200 120" preserveAspectRatio="none">
+                <path d="M0,0V46.29c47.79,22.2,103.59,32.17,158,28,70.36-5.37,136.33-33.31,206.8-37.5C438.64,32.43,512.34,53.67,583,72.05c69.27,18,138.3,24.88,209.4,13.08,36.15-6,69.85-17.84,104.45-29.34C989.49,25,1113-14.29,1200,52.47V0Z" opacity=".25"></path>
+                <path d="M0,0V15.81C13,36.92,27.64,56.86,47.69,72.05,99.41,111.27,165,111,224.58,91.58c31.15-10.15,60.09-26.07,89.67-39.8,40.92-19,84.73-46,130.83-49.67,36.26-2.85,70.9,9.42,98.6,31.56,31.77,25.39,62.32,62,103.63,73,40.44,10.79,81.35-6.69,119.13-24.28s75.16-39,116.92-43.05c59.73-5.85,113.28,22.88,168.9,38.84,30.2,8.66,59,6.17,87.09-7.5,22.43-10.89,48-26.93,60.65-49.24V0Z" opacity=".5"></path>
+                <path d="M0,0V5.63C149.93,59,314.09,71.32,475.83,42.57c43-7.64,84.23-20.12,127.61-26.46,59-8.63,112.48,12.24,165.56,35.4C827.93,77.22,886,95.24,951.2,90c86.53-7,172.46-45.71,248.8-84.81V0Z"></path>
+            </svg>
+        </div>
+
+        <div class="footer-content-wrapper">
+            <div class="footer-main">
+                <svg class="icon icon-lg" style="vertical-align: middle;"><use href="#icon-stethoscope"></use></svg>
+                لوحة مراجعة NBME - طريقك نحو التميز الطبي
+            </div>
+
+            <div class="footer-divider"></div>
+
+            <div class="footer-signature">
+                <div class="signature-badge">
+                    <div class="badge-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z"/>
+                        </svg>
+                    </div>
+                    <div class="badge-content">
+                        <div class="signature-text">صُنع بتميز وإبداع بواسطة</div>
+                        <div class="developer-credit">
+                            <span class="dev-name">7amoodi</span>
+                            <span class="heart-icon">♥</span>
+                        </div>
+                        <div class="signature-tagline">Code • Design • Innovation</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="footer-year">
+                © <span id="currentYear"></span> • جميع الحقوق محفوظة
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Global Data
+let nbmeData = [];
+let saveTimeout;
+
+// Initialize
+document.addEventListener('DOMContentLoaded', function() {
+    loadData();
+    loadTheme();
+    document.getElementById('nbmeNumber').addEventListener('change', function() {
+        document.getElementById('customNumberGroup').style.display = 
+            this.value === 'custom' ? 'block' : 'none';
+    });
+
+    // Set current year
+    document.getElementById('currentYear').textContent = new Date().getFullYear();
+});
+
+// Theme Toggle
+function toggleTheme() {
+    const currentTheme = document.documentElement.getAttribute('data-theme');
+    const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+    document.documentElement.setAttribute('data-theme', newTheme);
+    localStorage.setItem('theme', newTheme);
+
+    const icon = document.getElementById('themeIcon');
+    icon.innerHTML = newTheme === 'dark' ? 
+        '<use href="#icon-moon"></use>' : 
+        '<use href="#icon-sun"></use>';
+}
+
+function loadTheme() {
+    const savedTheme = localStorage.getItem('theme') || 'light';
+    document.documentElement.setAttribute('data-theme', savedTheme);
+    const icon = document.getElementById('themeIcon');
+    icon.innerHTML = savedTheme === 'dark' ? 
+        '<use href="#icon-moon"></use>' : 
+        '<use href="#icon-sun"></use>';
+}
+
+// Data Management
+function loadData() {
+    const saved = localStorage.getItem('nbmeReviewData');
+    if (saved) {
+        nbmeData = JSON.parse(saved);
+        renderNbmes();
+        updateStats();
+    }
+}
+
+function saveData() {
+    showSaveIndicator();
+    clearTimeout(saveTimeout);
+    saveTimeout = setTimeout(() => {
+        localStorage.setItem('nbmeReviewData', JSON.stringify(nbmeData));
+        hideSaveIndicator();
+    }, 800);
+}
+
+function showSaveIndicator() {
+    document.getElementById('saveIndicator').classList.add('show');
+}
+
+function hideSaveIndicator() {
+    document.getElementById('saveIndicator').classList.remove('show');
+}
+
+function showToast(message, isError = false) {
+    const toast = document.getElementById('toast');
+    const toastMessage = document.getElementById('toastMessage');
+    toastMessage.textContent = message;
+    toast.classList.toggle('error', isError);
+    toast.classList.add('show');
+
+    setTimeout(() => {
+        toast.classList.remove('show');
+    }, 3000);
+}
+
+// Modal Management
+function openAddNbmeModal() {
+    document.getElementById('addNbmeModal').classList.add('show');
+    document.getElementById('examDate').valueAsDate = new Date();
+}
+
+function closeModal() {
+    document.getElementById('addNbmeModal').classList.remove('show');
+    document.getElementById('nbmeNumber').value = '25';
+    document.getElementById('customNumberGroup').style.display = 'none';
+    document.getElementById('customNumber').value = '';
+}
+
+function createNbme() {
+    let nbmeNum = document.getElementById('nbmeNumber').value;
+    if (nbmeNum === 'custom') {
+        nbmeNum = document.getElementById('customNumber').value.trim();
+        if (!nbmeNum) {
+            showToast('الرجاء إدخال رقم مخصص', true);
+            return;
+        }
+    }
+
+    const examDate = document.getElementById('examDate').value;
+    if (!examDate) {
+        showToast('الرجاء اختيار تاريخ الامتحان', true);
+        return;
+    }
+
+    // Check for duplicates
+    if (nbmeData.some(n => n.number === nbmeNum)) {
+        showToast('هذا الرقم موجود بالفعل!', true);
+        return;
+    }
+
+    const newNbme = {
+        id: Date.now(),
+        number: nbmeNum,
+        date: examDate,
+        score: 0,
+        questions: []
+    };
+
+    // Add default questions
+    for (let i = 1; i <= 200; i++) {
+        newNbme.questions.push({
+            id: Date.now() + i,
+            number: i,
+            status: 'Correct',
+            errorType: '',
+            system: '',
+            contentType: '',
+            vignette: '',
+            objective: '',
+            notes: ''
+        });
+    }
+
+    nbmeData.unshift(newNbme);
+    saveData();
+    renderNbmes();
+    updateStats();
+    closeModal();
+    showToast('تم إضافة الامتحان بنجاح!');
+}
+
+// Render Functions
+function renderNbmes() {
+    const container = document.getElementById('nbmeList');
+    if (nbmeData.length === 0) {
+        container.innerHTML = `
+            <div class="empty-state">
+                <svg class="empty-state-icon" viewBox="0 0 24 24" fill="currentColor">
+                    <use href="#icon-medical-exam"></use>
+                </svg>
+                <div class="empty-state-text">لا توجد امتحانات بعد</div>
+                <div class="empty-state-subtext">ابدأ بإضافة أول امتحان NBME!</div>
+            </div>
+        `;
+        return;
+    }
+
+    container.innerHTML = nbmeData.map(nbme => createNbmeElement(nbme)).join('');
+}
+
+function createNbmeElement(nbme) {
+    const incorrectCount = nbme.questions.filter(q => q.status === 'Incorrect').length;
+    const correctCount = nbme.questions.filter(q => q.status === 'Correct').length;
+    const guessedCount = nbme.questions.filter(q => q.status === 'Guessed').length;
+    const totalQuestions = nbme.questions.length;
+
+    const incorrectPercent = (incorrectCount / totalQuestions * 100).toFixed(1);
+    const correctPercent = (correctCount / totalQuestions * 100).toFixed(1);
+    const guessedPercent = (guessedCount / totalQuestions * 100).toFixed(1);
+
+    return `
+        <div class="nbme-item">
+            <div class="nbme-header" onclick="toggleNbme(${nbme.id})">
+                <div class="nbme-header-left">
+                    <div class="nbme-title">
+                        <svg class="icon"><use href="#icon-medical-exam"></use></svg>
+                        NBME ${nbme.number}
+                    </div>
+                    <div class="nbme-score">${nbme.score}%</div>
+                    <div class="nbme-date">
+                        <svg class="icon icon-sm" style="margin-left: 6px;"><use href="#icon-calendar"></use></svg>
+                        ${new Date(nbme.date).toLocaleDateString('ar-EG')}
+                    </div>
+                </div>
+                <div class="nbme-header-right">
+                    <span style="background: rgba(255,255,255,0.2); padding: 8px 16px; border-radius: 8px; font-weight: 700;">
+                        ${incorrectCount} خطأ
+                    </span>
+                    <svg class="icon expand-icon" id="expand-${nbme.id}">
+                        <use href="#icon-chevron-down"></use>
+                    </svg>
+                </div>
+            </div>
+            <div class="nbme-content" id="content-${nbme.id}">
+                <div class="nbme-body">
+                    <div class="nbme-stats-grid">
+                        <div class="nbme-stat-item">
+                            <div class="nbme-stat-label">الدرجة الكلية</div>
+                            <div class="nbme-stat-value" style="color: var(--info);">${nbme.score}%</div>
+                            <div class="progress-container">
+                                <div class="progress-bar-wrapper">
+                                    <div class="progress-bar progress-info" style="width: ${nbme.score}%;"></div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="nbme-stat-item">
+                            <div class="nbme-stat-label">إجابات صحيحة</div>
+                            <div class="nbme-stat-value" style="color: var(--success);">${correctCount}</div>
+                            <div class="progress-container">
+                                <div class="progress-bar-wrapper">
+                                    <div class="progress-bar progress-success" style="width: ${correctPercent}%;"></div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="nbme-stat-item">
+                            <div class="nbme-stat-label">إجابات خاطئة</div>
+                            <div class="nbme-stat-value" style="color: var(--danger);">${incorrectCount}</div>
+                            <div class="progress-container">
+                                <div class="progress-bar-wrapper">
+                                    <div class="progress-bar progress-danger" style="width: ${incorrectPercent}%;"></div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="nbme-stat-item">
+                            <div class="nbme-stat-label">تخمينات</div>
+                            <div class="nbme-stat-value" style="color: var(--warning);">${guessedCount}</div>
+                            <div class="progress-container">
+                                <div class="progress-bar-wrapper">
+                                    <div class="progress-bar progress-warning" style="width: ${guessedPercent}%;"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div style="margin: 24px 0;">
+                        <label style="display: block; color: var(--text-secondary); font-weight: 700; margin-bottom: 10px; font-size: 0.875em;">
+                            الدرجة الكلية:
+                        </label>
+                        <input type="number" 
+                               value="${nbme.score}" 
+                               onchange="updateScore(${nbme.id}, this.value)"
+                               min="0" 
+                               max="100"
+                               style="max-width: 200px;">
+                    </div>
+
+                    <div class="questions-container">
+                        <div class="table-wrapper">
+                            <table class="questions-table">
+                                <thead>
+                                    <tr>
+                                        <th>#</th>
+                                        <th>الحالة</th>
+                                        <th>نوع الخطأ</th>
+                                        <th>النظام</th>
+                                        <th>نوع المحتوى</th>
+                                        <th>ملخص السؤال</th>
+                                        <th>الهدف التعليمي</th>
+                                        <th>ملاحظات</th>
+                                        <th>إجراء</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    ${nbme.questions.map(q => createQuestionRow(nbme.id, q)).join('')}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <div style="margin-top: 24px; text-align: center;">
+                        <button class="btn btn-danger" onclick="deleteNbme(${nbme.id})">
+                            <svg class="icon icon-sm"><use href="#icon-trash"></use></svg>
+                            حذف الامتحان
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+}
+
+function createQuestionRow(nbmeId, question) {
+    const statusClass = `status-${question.status.toLowerCase()}`;
+
+    return `
+        <tr class="${statusClass}">
+            <td style="font-weight: 800;">${question.number}</td>
+            <td>
+                <select onchange="updateQuestion(${nbmeId}, ${question.id}, 'status', this.value)">
+                    <option value="Correct" ${question.status === 'Correct' ? 'selected' : ''}>صحيح</option>
+                    <option value="Incorrect" ${question.status === 'Incorrect' ? 'selected' : ''}>خطأ</option>
+                    <option value="Guessed" ${question.status === 'Guessed' ? 'selected' : ''}>تخمين</option>
+                </select>
+            </td>
+            <td>
+                <select onchange="updateQuestion(${nbmeId}, ${question.id}, 'errorType', this.value)">
+                    <option value="">-</option>
+                    <option value="Knowledge Gap" ${question.errorType === 'Knowledge Gap' ? 'selected' : ''}>فجوة معرفية</option>
+                    <option value="Reasoning" ${question.errorType === 'Reasoning' ? 'selected' : ''}>خطأ استنتاج</option>
+                    <option value="Careless" ${question.errorType === 'Careless' ? 'selected' : ''}>إهمال</option>
+                    <option value="Misread Question" ${question.errorType === 'Misread Question' ? 'selected' : ''}>سوء فهم السؤال</option>
+                    <option value="Time Pressure" ${question.errorType === 'Time Pressure' ? 'selected' : ''}>ضغط الوقت</option>
+                </select>
+            </td>
+            <td>
+                <select onchange="updateQuestion(${nbmeId}, ${question.id}, 'system', this.value)">
+                    <option value="">-</option>
+                    <option value="Cardio" ${question.system === 'Cardio' ? 'selected' : ''}>قلبي وعائي</option>
+                    <option value="Renal" ${question.system === 'Renal' ? 'selected' : ''}>كلوي</option>
+                    <option value="Respiratory" ${question.system === 'Respiratory' ? 'selected' : ''}>تنفسي</option>
+                    <option value="GI" ${question.system === 'GI' ? 'selected' : ''}>هضمي</option>
+                    <option value="CNS" ${question.system === 'CNS' ? 'selected' : ''}>عصبي</option>
+                    <option value="Endocrine" ${question.system === 'Endocrine' ? 'selected' : ''}>غدد صماء</option>
+                    <option value="Heme/Onc" ${question.system === 'Heme/Onc' ? 'selected' : ''}>دم وأورام</option>
+                    <option value="MSK" ${question.system === 'MSK' ? 'selected' : ''}>عضلي هيكلي</option>
+                    <option value="Psych" ${question.system === 'Psych' ? 'selected' : ''}>نفسي</option>
+                    <option value="Repro" ${question.system === 'Repro' ? 'selected' : ''}>تناسلي</option>
+                    <option value="Immuno" ${question.system === 'Immuno' ? 'selected' : ''}>مناعي</option>
+                    <option value="Derm" ${question.system === 'Derm' ? 'selected' : ''}>جلدي</option>
+                    <option value="Other" ${question.system === 'Other' ? 'selected' : ''}>أخرى</option>
+                </select>
+            </td>
+            <td>
+                <input type="text" 
+                       value="${question.contentType}" 
+                       onchange="updateQuestion(${nbmeId}, ${question.id}, 'contentType', this.value)"
+                       placeholder="نوع المحتوى">
+            </td>
+            <td>
+                <textarea onchange="updateQuestion(${nbmeId}, ${question.id}, 'vignette', this.value)"
+                          placeholder="ملخص السؤال...">${question.vignette}</textarea>
+            </td>
+            <td>
+                <textarea onchange="updateQuestion(${nbmeId}, ${question.id}, 'objective', this.value)"
+                          placeholder="الهدف التعليمي...">${question.objective}</textarea>
+            </td>
+            <td>
+                <textarea onchange="updateQuestion(${nbmeId}, ${question.id}, 'notes', this.value)"
+                          placeholder="ملاحظات...">${question.notes}</textarea>
+            </td>
+            <td>
+                <button class="btn btn-danger" onclick="deleteQuestion(${nbmeId}, ${question.id})">
+                    <svg class="icon icon-sm"><use href="#icon-trash"></use></svg>
+                </button>
+            </td>
+        </tr>
+    `;
+}
+
+// Update Functions
+function updateScore(nbmeId, newScore) {
+    const nbme = nbmeData.find(n => n.id === nbmeId);
+    if (nbme) {
+        nbme.score = parseFloat(newScore) || 0;
+        saveData();
+        updateStats();
+        renderNbmes();
+        showToast('تم تحديث الدرجة');
+    }
+}
+
+function updateQuestion(nbmeId, questionId, field, value) {
+    const nbme = nbmeData.find(n => n.id === nbmeId);
+    if (nbme) {
+        const question = nbme.questions.find(q => q.id === questionId);
+        if (question) {
+            question[field] = value;
+            saveData();
+            updateStats();
+            renderNbmes();
+        }
+    }
+}
+
+function deleteQuestion(nbmeId, questionId) {
+    if (!confirm('هل أنت متأكد من حذف هذا السؤال؟')) return;
+
+    const nbme = nbmeData.find(n => n.id === nbmeId);
+    if (nbme) {
+        nbme.questions = nbme.questions.filter(q => q.id !== questionId);
+        saveData();
+        updateStats();
+        renderNbmes();
+        showToast('تم حذف السؤال');
+    }
+}
+
+function deleteNbme(nbmeId) {
+    if (!confirm('هل أنت متأكد من حذف هذا الامتحان بالكامل؟')) return;
+
+    nbmeData = nbmeData.filter(n => n.id !== nbmeId);
+    saveData();
+    updateStats();
+    renderNbmes();
+    showToast('تم حذف الامتحان');
+}
+
+// Stats Functions
+function updateStats() {
+    const totalExams = nbmeData.length;
+    document.getElementById('totalExams').textContent = totalExams;
+
+    if (totalExams === 0) {
+        document.getElementById('totalIncorrect').textContent = '0';
+        document.getElementById('avgScore').textContent = '-%';
+        document.getElementById('highScore').textContent = '-%';
+
+        document.getElementById('incorrectProgress').style.width = '0%';
+        document.getElementById('avgProgress').style.width = '0%';
+        document.getElementById('highProgress').style.width = '0%';
+        return;
+    }
+
+    const totalIncorrect = nbmeData.reduce((sum, nbme) => {
+        return sum + nbme.questions.filter(q => q.status === 'Incorrect').length;
+    }, 0);
+
+    const avgScore = nbmeData.reduce((sum, nbme) => sum + nbme.score, 0) / totalExams;
+    const highScore = Math.max(...nbmeData.map(n => n.score));
+
+    document.getElementById('totalIncorrect').textContent = totalIncorrect;
+    document.getElementById('avgScore').textContent = avgScore.toFixed(1) + '%';
+    document.getElementById('highScore').textContent = highScore.toFixed(1) + '%';
+
+    // Update progress bars with animation
+    setTimeout(() => {
+        const maxIncorrect = Math.max(...nbmeData.map(n => n.questions.filter(q => q.status === 'Incorrect').length));
+        const incorrectPercent = maxIncorrect > 0 ? (totalIncorrect / (totalExams * 200) * 100) : 0;
+        document.getElementById('incorrectProgress').style.width = incorrectPercent + '%';
+        document.getElementById('avgProgress').style.width = avgScore + '%';
+        document.getElementById('highProgress').style.width = highScore + '%';
+    }, 100);
+}
+
+// Toggle NBME
+function toggleNbme(nbmeId) {
+    const content = document.getElementById(`content-${nbmeId}`);
+    const icon = document.getElementById(`expand-${nbmeId}`);
+
+    if (content.classList.contains('expanded')) {
+        content.classList.remove('expanded');
+        icon.classList.remove('expanded');
+    } else {
+        content.classList.add('expanded');
+        icon.classList.add('expanded');
+    }
+}
+
+// Export Functions
+function exportToExcel() {
+    if (nbmeData.length === 0) {
+        showToast('لا توجد بيانات للتصدير', true);
+        return;
+    }
+
+    const wb = XLSX.utils.book_new();
+
+    // Summary Sheet
+    const summaryData = nbmeData.map(nbme => ({
+        'NBME': `NBME ${nbme.number}`,
+        'التاريخ': nbme.date,
+        'الدرجة': nbme.score + '%',
+        'إجمالي الأسئلة': nbme.questions.length,
+        'صحيح': nbme.questions.filter(q => q.status === 'Correct').length,
+        'خطأ': nbme.questions.filter(q => q.status === 'Incorrect').length,
+        'تخمين': nbme.questions.filter(q => q.status === 'Guessed').length
+    }));
+
+    const summarySheet = XLSX.utils.json_to_sheet(summaryData);
+    XLSX.utils.book_append_sheet(wb, summarySheet, 'ملخص');
+
+    // Details for each NBME
+    nbmeData.forEach(nbme => {
+        const incorrectQuestions = nbme.questions.filter(q => q.status === 'Incorrect');
+        if (incorrectQuestions.length > 0) {
+            const detailData = incorrectQuestions.map(q => ({
+                'رقم السؤال': q.number,
+                'نوع الخطأ': q.errorType,
+                'النظام': q.system,
+                'نوع المحتوى': q.contentType,
+                'ملخص السؤال': q.vignette,
+                'الهدف التعليمي': q.objective,
+                'ملاحظات': q.notes
+            }));
+
+            const detailSheet = XLSX.utils.json_to_sheet(detailData);
+            XLSX.utils.book_append_sheet(wb, detailSheet, `NBME ${nbme.number}`);
+        }
+    });
+
+    XLSX.writeFile(wb, `NBME_Review_${new Date().toISOString().split('T')[0]}.xlsx`);
+    showToast('تم التصدير إلى Excel بنجاح!');
+}
+
+function exportToPDF() {
+    if (nbmeData.length === 0) {
+        showToast('لا توجد بيانات للتصدير', true);
+        return;
+    }
+
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF();
+
+    doc.text('NBME Review Summary', 14, 15);
+
+    const summaryData = nbmeData.map(nbme => [
+        `NBME ${nbme.number}`,
+        nbme.date,
+        `${nbme.score}%`,
+        nbme.questions.filter(q => q.status === 'Incorrect').length.toString()
+    ]);
+
+    doc.autoTable({
+        head: [['NBME', 'Date', 'Score', 'Incorrect']],
+        body: summaryData,
+        startY: 25
+    });
+
+    doc.save(`NBME_Review_${new Date().toISOString().split('T')[0]}.pdf`);
+    showToast('تم التصدير إلى PDF بنجاح!');
+}
+
+function exportBackup() {
+    const dataStr = JSON.stringify(nbmeData, null, 2);
+    const dataBlob = new Blob([dataStr], { type: 'application/json' });
+    const url = URL.createObjectURL(dataBlob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `NBME_Backup_${new Date().toISOString().split('T')[0]}.json`;
+    link.click();
+    URL.revokeObjectURL(url);
+    showToast('تم إنشاء النسخة الاحتياطية!');
+}
+
+function importBackup(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        try {
+            const imported = JSON.parse(e.target.result);
+            if (Array.isArray(imported)) {
+                nbmeData = imported;
+                saveData();
+                renderNbmes();
+                updateStats();
+                showToast('تم استيراد البيانات بنجاح!');
+            } else {
+                showToast('ملف غير صالح', true);
+            }
+        } catch (error) {
+            showToast('خطأ في قراءة الملف', true);
+        }
+    };
+    reader.readAsText(file);
+    event.target.value = '';
+}
+
+// Study Plan
+function generateStudyPlan() {
+    if (nbmeData.length === 0) {
+        showToast('أضف امتحانات أولاً لإنشاء خطة دراسية', true);
+        return;
+    }
+
+    const modal = document.getElementById('studyPlanModal');
+    const content = document.getElementById('studyPlanContent');
+
+    // Analyze weak systems
+    const systemErrors = {};
+    const errorTypes = {};
+
+    nbmeData.forEach(nbme => {
+        nbme.questions.filter(q => q.status === 'Incorrect').forEach(q => {
+            if (q.system) {
+                systemErrors[q.system] = (systemErrors[q.system] || 0) + 1;
+            }
+            if (q.errorType) {
+                errorTypes[q.errorType] = (errorTypes[q.errorType] || 0) + 1;
+            }
+        });
+    });
+
+    const sortedSystems = Object.entries(systemErrors).sort((a, b) => b[1] - a[1]);
+    const sortedErrors = Object.entries(errorTypes).sort((a, b) => b[1] - a[1]);
+
+    let planHTML = `
+        <div style="background: var(--bg-secondary); padding: 20px; border-radius: 12px; margin-bottom: 20px;">
+            <h3 style="color: var(--primary); margin-bottom: 12px;">📊 تحليل الأداء</h3>
+            <p>إجمالي الامتحانات: <strong>${nbmeData.length}</strong></p>
+            <p>متوسط الدرجات: <strong>${(nbmeData.reduce((sum, n) => sum + n.score, 0) / nbmeData.length).toFixed(1)}%</strong></p>
+        </div>
+
+        <div style="background: var(--bg-secondary); padding: 20px; border-radius: 12px; margin-bottom: 20px;">
+            <h3 style="color: var(--danger); margin-bottom: 12px;">⚠️ الأنظمة الضعيفة</h3>
+            <ul style="list-style: none; padding: 0;">
+    `;
+
+    sortedSystems.slice(0, 5).forEach(([system, count]) => {
+        planHTML += `<li style="padding: 8px 0; border-bottom: 1px solid var(--border-color);">
+            ${system}: <strong>${count} أخطاء</strong>
+        </li>`;
+    });
+
+    planHTML += `
+            </ul>
+        </div>
+
+        <div style="background: var(--bg-secondary); padding: 20px; border-radius: 12px; margin-bottom: 20px;">
+            <h3 style="color: var(--warning); margin-bottom: 12px;">📝 أنواع الأخطاء الشائعة</h3>
+            <ul style="list-style: none; padding: 0;">
+    `;
+
+    sortedErrors.forEach(([type, count]) => {
+        planHTML += `<li style="padding: 8px 0; border-bottom: 1px solid var(--border-color);">
+            ${type}: <strong>${count} مرة</strong>
+        </li>`;
+    });
+
+    planHTML += `
+            </ul>
+        </div>
+
+        <div style="background: linear-gradient(135deg, rgba(99, 102, 241, 0.1), rgba(139, 92, 246, 0.1)); padding: 20px; border-radius: 12px;">
+            <h3 style="color: var(--success); margin-bottom: 12px;">✨ التوصيات</h3>
+            <p style="line-height: 1.8;">
+                ركز على الأنظمة الضعيفة أولاً، خاصة <strong>${sortedSystems[0]?.[0] || 'لا يوجد'}</strong>.
+                راجع الأسئلة الخاطئة بعناية وحاول فهم السبب.
+                خصص وقتاً يومياً لمراجعة الأهداف التعليمية.
+            </p>
+        </div>
+    `;
+
+    content.innerHTML = planHTML;
+    modal.classList.add('show');
+}
+
+function closeStudyPlanModal() {
+    document.getElementById('studyPlanModal').classList.remove('show');
+}
+</script>
+</body>
+</html>
